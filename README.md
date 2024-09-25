@@ -1,4 +1,4 @@
-# [中文版资料](./README_zh.md)
+# [中文版资料](./README.zh-CN.md)
 Email: ken@emakefun.com</br>
 The latest information download address:https://github.com/emakefun/ble-nano  </br>
 
@@ -27,4 +27,4 @@ Arduino IDE 1.8.6 and above Version</br>
 # AT command
 
 # Data download
-[Download](https://github.com/emakefun/emakefun-nano-plus/archive/master.zip)</br>
+[Download](https://github.com/emakefun/ble-uno/archive/master.zip)</br>

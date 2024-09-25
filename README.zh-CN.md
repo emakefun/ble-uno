@@ -159,8 +159,8 @@ void loop() {
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="./image/android_app_test3.jpg" alt="location_permissions1" style="zoom: 33%;" /> | <img src="./image/android_app_test4.jpg" alt="location_permissions1" style="zoom: 33%;" /> |
 
-5)	点击发送字符串"on"后，打开ArduinoIDE的串口监视器上打印 turn on led，同时观察ble-uno上的L灯点亮，代表app蓝牙控制主板上的L灯成功，同样的方法发送字符串“off”后，ble-uno上的L灯会熄灭。到此我们安卓手机蓝牙测试完成。
-
+5) 点击发送字符串"on"后，打开ArduinoIDE的串口监视器上打印 turn on led，同时观察ble-uno上的L灯点亮，代表app蓝牙控制主板上的L灯成功，同样的方法发送字符串“off”后，ble-uno上的L灯会熄灭。到此我们安卓手机蓝牙测试完成。
+6) 如果需要接收蓝牙模块发送过来的数据，需要打开通知功能
 
 ## ble-uno和苹果手机/电脑/平板连接
 
@@ -183,7 +183,7 @@ void loop() {
 | <img src="./image/ios_app_test5.jpg" alt="location_permissions1" style="zoom:33%;" /> | <img src="./image/ios_app_test6.jpg" alt="location_permissions1" style="zoom:33%;" /> | <img src="./image/ios_app_test7.jpg" alt="location_permissions1" style="zoom:33%;" /> |
 
 5) 点击done后会发送字符串"on"后，打开ArduinoIDE的串口监视器上打印 turn on led，同时观察ble-uno上的L灯点亮，代表app蓝牙控制主板上的L灯成功，同样的方法发送字符串“off”后，ble-uno上的L灯会熄灭。到此我们IOS蓝牙测试完成。
-
+6) 如果需要接收蓝牙模块发送过来的数据，需要打开Notify功能
 
 ## ble-uno和win10蓝牙连接
 
