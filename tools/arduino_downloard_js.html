@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>BLE Echo Service</title>
+</head>
+<body>
+    <button id="connect">连接 BLE 设备</button>
+    <input type="text" id="inputData" placeholder="输入数据">
+    <button id="sendData">发送AT数据</button>
+    <input type="file" id="inputFile" placeholder="输入数据">
+    <button id="sendDataS">上传Arduino程序</button>
+    <button id="readData">读取数据</button>
+    <div id="output"></div>
+    <script>
+        const SERVICE_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb";
+
+        const BLE_AT_UUID = "0000ffe2-0000-1000-8000-00805f9b34fb";
+        const SERIAL_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
+
+        const Resp_STK_INSYNC = 0x14
+        const Resp_STK_OK = 0x10
+        const Cmnd_STK_GET_SYNC = 0x30
+        const Cmnd_STK_SET_DEVICE = 0x42
+        const Cmnd_STK_ENTER_PROGMODE = 0x50
+        const Cmnd_STK_LOAD_ADDRESS = 0x55
+        const STK_UNIVERSAL = 0x56
+        const Cmnd_STK_PROG_PAGE = 0x64
+        const Cmnd_STK_LEAVE_PROGMODE =  0x51
+        const Cmnd_STK_READ_SIGN = 0x75
+        const Sync_CRC_EOP = 0x20
+        const  Resp_STK_NOSYNC =  0x15
+        const Cmnd_STK_READ_PAGE =  0x74
+        const OK_RESPONSE =  [Resp_STK_INSYNC, Resp_STK_OK]
+
+
+        const bleOptions = {
+                filters:[
+                    { services: [SERVICE_UUID] }
+                ]
+            }
+        
+
+        let bleDevice = null;
+        let bleServer = null;
+        
+        let serialChar = null;
+        let atChar = null;
+        let fileHex = null;
+        let respQueue = [];
+
+        document.getElementById('connect').addEventListener('click', () => {
+            navigator.bluetooth.requestDevice(bleOptions)
+            .then( device =>{
+                bleDevice = device;
+                device.addEventListener('gattserverdisconnected', handleDisconnectError);
+                return device.gatt.connect();
+            }).then( server => {
+                bleServer = server
+                bleServer.getPrimaryService(SERVICE_UUID)
+                .then(service => service.getCharacteristic(SERIAL_UUID))
+                .then(characteristic => characteristic.startNotifications())
+                .then(characteristic => {
+                    serialChar = characteristic;
+                    characteristic.addEventListener('characteristicvaluechanged', serialNotify)
+                });
+                bleServer.getPrimaryService(SERVICE_UUID)
+                .then(service => service.getCharacteristic(BLE_AT_UUID))
+                .then(characteristic => characteristic.startNotifications())
+                .then(characteristic => {
+                    atChar = characteristic;
+                    characteristic.addEventListener('characteristicvaluechanged', bleAtNotify);
+                }
+            );
+            })
+            .catch(e => {
+                console.log(e);
+            });
+        });
+
+        document.getElementById('inputFile').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            console.log(event.target.files[0])
+            let reader = new FileReader()
+            reader.onload = (event) => {
+                fileHex = new TextDecoder("utf-8").decode(event.target.result)
+                fileHex = parseIntelHex(fileHex);
+                fileHex = fileHex.data;
+                console.log(fileHex)
+            }
+             
+            reader.readAsArrayBuffer(file)
+        });
+
+        document.getElementById('sendData').addEventListener('click', () => {
+            sendATMessage(document.getElementById('inputData').value);
+        });
+
+        document.getElementById('sendDataS').addEventListener('click', () => {
+            sendSerialMessage();
+        });
+
+        document.getElementById('readData').addEventListener('click', () => {
+            if (!bleDevice || !bleDevice.gatt.connected) {
+                console.log('设备未连接');
+                return;
+            }
+            bleDevice.gatt.getPrimaryService(SERVICE_UUID)
+            .then(service => service.getCharacteristic(BLE_AT_UUID))
+            .then(characteristic => characteristic.readValue())
+            .then(value => {
+                let data = new TextDecoder().decode(value);
+                document.getElementById('output').textContent = '读取到的数据: ' + data;
+            })
+            .catch(error => {
+                console.log('读取数据错误：' + error);
+            });
+        });
+
+        function serialNotify(event){
+            const dataview = event.target.value;
+            console.log("serial_notify----" + dataview.byteLength + "  " + new Uint8Array(dataview.buffer));
+        }
+
+        function bleAtNotify(event){
+
+            const decoder = new TextDecoder();
+            console.log("bleAt_notify----" +decoder.decode(event.target.value));
+        }
+
+        function handleDisconnectError(event){
+            console.log("disccon " + event)
+        }
+        
+
+       async function sendATMessage(message){
+            console.log("发送了 " + message)
+            message = message + "\r\n";
+            const data = new TextEncoder("utf-8").encode(message);
+            const server = await bleDevice.gatt.connect();
+            console.log("1")
+            const service = await server.getPrimaryService(SERVICE_UUID)
+            console.log("2")
+            const a = await service.getCharacteristic(BLE_AT_UUID)
+            console.log("3")
+            await a.writeValue(data);
+        }
+
+        function waitForResponse(device,resp_data,  timeout = 5000) {
+            return new Promise((resolve, reject) => {
+                let timeoutId;
+                const onResponse = (event) => {
+
+                        const dataView = event.target.value
+
+                        for (let i = 0; i < dataView.byteLength; i++) {
+                            const char = dataView.getUint8(i); // 获取单个字节
+                            respQueue.push(char);
+                        }
+                    // 验证返回值是否符合预期
+                        if (bufferEqual(resp_data, new Uint8Array(respQueue))) {
+                            //console.log("rr " + respQueue)
+                            clearTimeout(timeoutId);
+                            device.removeEventListener('characteristicvaluechanged', onResponse);
+                            resolve(respQueue);
+                        }
+                        
+                };
+
+                // 设置超时处理
+                timeoutId = setTimeout(() => {
+                    device.removeEventListener('characteristicvaluechanged', onResponse);
+                    reject(new Error('Timeout waiting for the expected response.'));
+                }, timeout);
+
+                // 监听 characteristic 的 value changed 事件
+                console.log("监听啦")
+                respQueue = []
+                device.addEventListener('characteristicvaluechanged', onResponse);
+            });
+        }
+
+        async function sendSerialMessage(){
+            console.log("发送了serial ")
+            try {
+                
+                sendATMessage("AT+BAUD=4");
+                await new Promise((resolve) => setTimeout(resolve, 100))
+                sendATMessage("AT+TARGE_RESET");
+                await new Promise((resolve) => setTimeout(resolve, 100))
+                const syncReq =  new Uint8Array([Cmnd_STK_GET_SYNC, Sync_CRC_EOP])
+                const okResp = new Uint8Array(OK_RESPONSE)
+                const sync_succ = await sendSerialAndTestRet(syncReq, okResp);
+                if(!sync_succ){
+                    throw new Error("stk500 sync error")
+                }
+                await sendSerialAndTestRet(syncReq, okResp);
+                await sendSerialAndTestRet(syncReq, okResp);
+                await setOption();
+                const enterProgModelReq =  new Uint8Array([Cmnd_STK_ENTER_PROGMODE, Sync_CRC_EOP])
+                const enter_succ = await sendSerialAndTestRet(enterProgModelReq, okResp);
+                if(!enter_succ){
+                    throw new Error("stk500 enter progmodel error")
+                }
+                // const universalReq =  new Uint8Array([STK_UNIVERSAL, 172, 128, 0, 0, Sync_CRC_EOP])
+                // const universalResp = new Uint8Array([Resp_STK_INSYNC, 0, Resp_STK_OK])
+                // const universal_succ = await sendSerialAndTestRet(universalReq, universalResp);
+                // if(!universal_succ){
+                //     throw new Error("stk500 universal error")
+                // }
+                await upload(fileHex)
+                const leaveProgModelReq =  new Uint8Array([Cmnd_STK_LEAVE_PROGMODE, Sync_CRC_EOP])
+                const leave_succ = await sendSerialAndTestRet(leaveProgModelReq, okResp);
+                if(!leave_succ){
+                    throw new Error("stk500 leaveProgMode error")
+                }
+            } catch (error) {
+                console.log(error)
+            }
+            
+            console.log("烧录成功啦");
+            
+        }
+
+        async function setOption() {
+            const options = {}
+            const aa =  new Uint8Array([
+              Cmnd_STK_SET_DEVICE,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               Sync_CRC_EOP
+            ])
+            const okResp = new Uint8Array(OK_RESPONSE)
+            const enter_succ = await sendSerialAndTestRet(aa, okResp);
+        }
+
+        async function upload(hex) {
+            const pageSize = 128
+            let pageaddr = 0
+            let writeBytes
+            let useaddr
+
+            try {
+                while (pageaddr < hex.length) {
+                console.log('program page')
+                useaddr = pageaddr >> 1
+                console.log(pageaddr)
+                console.log(useaddr)
+                await loadAddress(useaddr)
+                writeBytes = hex.slice(pageaddr, (hex.length > pageSize ? (pageaddr + pageSize) : hex.length - 1))
+                await loadPage(writeBytes)
+                console.log('programmed page')
+                pageaddr =  pageaddr + writeBytes.length
+                // await new Promise((resolve) => setTimeout(resolve, 1000))
+                console.log('page done')
+                }   
+            } catch (err) {
+                throw err
+            }
+            console.log('upload done')
+            return true
+        }
+
+        async function loadAddress(useaddr) {
+            const addr_low = useaddr & 0xff
+            const addr_high = (useaddr >> 8) & 0xff
+            const cmd =  new Uint8Array([Cmnd_STK_LOAD_ADDRESS, addr_low, addr_high, Sync_CRC_EOP]);
+            const okResp = new Uint8Array(OK_RESPONSE)
+            console.log(cmd)
+            console.log("loadAddress")
+            const ret = await sendSerialAndTestRet(cmd, okResp);
+            if(!ret){
+                throw new Error("stk500 loadAddress error")
+            }
+        }
+
+        async function loadPage(writeBytes) {
+            const bytes_low = writeBytes.length & 0xff
+            const bytes_high = writeBytes.length >> 8
+            const cmd1 = new Uint8Array([Cmnd_STK_PROG_PAGE, bytes_high, bytes_low, 0x46]);  
+            await serialChar.writeValueWithResponse(cmd1);
+            const cmd3 = new Uint8Array([Sync_CRC_EOP])
+            let i = 0;
+             console.log("loadAddress")
+            const length = writeBytes.length;
+            while (i < length) {
+                const splitLength = Math.min(60, length - i);        
+                console.log('splitLength:', splitLength);
+                const chunk = writeBytes.slice(i, i + splitLength);
+                await serialChar.writeValueWithResponse(new Uint8Array(chunk));
+                i += splitLength;
+            }
+            const okResp = new Uint8Array(OK_RESPONSE)
+            const ret = await sendSerialAndTestRet(cmd3, okResp);
+            if(!ret){
+                throw new Error("stk500 loadPage error")
+            }
+        }
+
+        function mergeUint8Arrays(...arrays) {
+            const totalLength = arrays.reduce((acc, arr) => acc + arr.length, 0);
+            const mergedArray = new Uint8Array(totalLength);
+
+            let offset = 0;
+            for (const arr of arrays) {
+                mergedArray.set(arr, offset);
+                offset += arr.length;
+            }
+
+            return mergedArray;
+        }
+
+
+
+        async function sendSerialAndTestRet(req_data, resp_data) {
+            console.log("发送--"+ req_data)
+            console.log("希望-" + resp_data)
+            const rr = waitForResponse(serialChar, resp_data);
+            await serialChar.writeValueWithResponse(req_data);
+            const resp = await rr;
+            const ret = bufferEqual(resp_data, new Uint8Array(resp));
+            console.log("返回--"+ new Uint8Array(resp))
+            return ret;
+        }
+
+        function bufferEqual(a, b) {
+            if (a.length !== b.length) {
+            return false
+            }
+            for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) {
+                return false
+            }
+            }
+            return true
+        }
+        
+        const DATA = 0,
+              END_OF_FILE = 1,
+              EXT_SEGMENT_ADDR = 2,
+              START_SEGMENT_ADDR = 3,
+              EXT_LINEAR_ADDR = 4,
+              START_LINEAR_ADDR = 5,
+              EMPTY_VALUE = 0xFF;
+
+function parseIntelHex(data, bufferSize) {
+  if (typeof Buffer !== "undefined" && data instanceof Buffer) {
+    data = data.toString('ascii');
+  }
+
+  // Initialization
+  let buf = new Uint8Array(bufferSize || 8192), // Use Uint8Array for browser compatibility
+    bufLength = 0, // Length of data in the buffer
+    highAddress = 0, // Upper address
+    startSegmentAddress = null,
+    startLinearAddress = null,
+    lineNum = 0, // Line number in the Intel Hex string
+    pos = 0; // Current position in the Intel Hex string
+
+  const SMALLEST_LINE = 11;
+  while (pos + SMALLEST_LINE <= data.length) {
+    // Parse an entire line
+    if (data.charAt(pos++) !== ':') {
+      throw new Error(`Line ${lineNum+1} does not start with a colon (:).`);
+    } else {
+      lineNum++;
+    }
+
+    // Number of bytes (hex digit pairs) in the data field
+    const dataLength = parseInt(data.substr(pos, 2), 16);
+    pos += 2;
+
+    // Get 16-bit address (big-endian)
+    const lowAddress = parseInt(data.substr(pos, 4), 16);
+    pos += 4;
+
+    // Record type
+    const recordType = parseInt(data.substr(pos, 2), 16);
+    pos += 2;
+
+    // Data field (hex-encoded string)
+    const dataField = data.substr(pos, dataLength * 2);
+    const dataFieldBuf = new Uint8Array(dataLength);
+    for (let i = 0; i < dataLength; i++) {
+      dataFieldBuf[i] = parseInt(dataField.substr(i * 2, 2), 16);
+    }
+    pos += dataLength * 2;
+
+    // Checksum
+    const checksum = parseInt(data.substr(pos, 2), 16);
+    pos += 2;
+
+    // Validate checksum
+    let calcChecksum = (dataLength + (lowAddress >> 8) + lowAddress + recordType) & 0xFF;
+    for (let i = 0; i < dataLength; i++) {
+      calcChecksum = (calcChecksum + dataFieldBuf[i]) & 0xFF;
+    }
+    calcChecksum = (0x100 - calcChecksum) & 0xFF;
+    if (checksum !== calcChecksum) {
+      throw new Error(`Invalid checksum on line ${lineNum}: got ${checksum}, but expected ${calcChecksum}`);
+    }
+
+    // Parse the record based on its recordType
+    switch (recordType) {
+      case DATA:
+        const absoluteAddress = highAddress + lowAddress;
+        // Expand buf, if necessary
+        if (absoluteAddress + dataLength >= buf.length) {
+          let tmp = new Uint8Array((absoluteAddress + dataLength) * 2);
+          tmp.set(buf);
+          buf = tmp;
+        }
+
+        // Write over skipped bytes with EMPTY_VALUE
+        if (absoluteAddress > bufLength) {
+          buf.fill(EMPTY_VALUE, bufLength, absoluteAddress);
+        }
+
+        // Write the dataFieldBuf to buf
+        buf.set(dataFieldBuf, absoluteAddress);
+        bufLength = Math.max(bufLength, absoluteAddress + dataLength);
+        break;
+        
+      case END_OF_FILE:
+        if (dataLength !== 0) {
+          throw new Error(`Invalid EOF record on line ${lineNum}.`);
+        }
+        return {
+          data: buf.slice(0, bufLength), // Return the data as a new Uint8Array
+          startSegmentAddress,
+          startLinearAddress
+        };
+        
+      case EXT_SEGMENT_ADDR:
+        if (dataLength !== 2 || lowAddress !== 0) {
+          throw new Error(`Invalid extended segment address record on line ${lineNum}.`);
+        }
+        highAddress = parseInt(dataField, 16) << 4;
+        break;
+
+      case START_SEGMENT_ADDR:
+        if (dataLength !== 4 || lowAddress !== 0) {
+          throw new Error(`Invalid start segment address record on line ${lineNum}.`);
+        }
+        startSegmentAddress = parseInt(dataField, 16);
+        break;
+
+      case EXT_LINEAR_ADDR:
+        if (dataLength !== 2 || lowAddress !== 0) {
+          throw new Error(`Invalid extended linear address record on line ${lineNum}.`);
+        }
+        highAddress = parseInt(dataField, 16) << 16;
+        break;
+
+      case START_LINEAR_ADDR:
+        if (dataLength !== 4 || lowAddress !== 0) {
+          throw new Error(`Invalid start linear address record on line ${lineNum}.`);
+        }
+        startLinearAddress = parseInt(dataField, 16);
+        break;
+
+      default:
+        throw new Error(`Invalid record type (${recordType}) on line ${lineNum}.`);
+    }
+
+    // Advance to the next line
+    if (data.charAt(pos) === '\r') {
+      pos++;
+    }
+    if (data.charAt(pos) === '\n') {
+      pos++;
+    }
+  }
+  
+  throw new Error(`Unexpected end of input: missing or invalid EOF record.`);
+}
+    </script>
+</body>
+</html>

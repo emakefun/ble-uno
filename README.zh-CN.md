@@ -12,7 +12,7 @@
 
 ## 什么是ble-uno
 
-​	ble-uno是emakefun公司基于官方标准Arduino uno V3.0主板上集成低功耗蓝牙芯片而开发一款具备无线蓝牙功能的开发板，它的功能和引脚，使用方法，完全兼容标准的Arduino uno V3.0主板，工作频段为2.4GHZ 范围，调制方式为 GFSK， 接收灵敏度-96dBm，最大发射功率为+5db，最大发射距离超过200米，采用RISC-V架构CH573芯片设计，支持用户通过AT命令查看修改设备名、服务UUID、发射功率、配对密码等指令，方便快捷使用。产品身材非常小，适合于很多对于体积有苛刻限制的应用。
+​	ble-uno是emakefun公司基于官方标准Arduino uno R3主板上集成低功耗蓝牙芯片而开发一款具备无线蓝牙功能的开发板，它的功能和引脚，使用方法，完全兼容标准的Arduino unoR3主板，工作频段为2.4GHZ 范围，调制方式为 GFSK， 接收灵敏度-96dBm，最大发射功率为+5db，最大发射距离超过200米，采用RISC-V架构CH573芯片设计，支持用户通过AT命令查看修改设备名、服务UUID、发射功率、配对密码等指令，方便快捷使用。产品身材非常小，适合于很多对于体积有苛刻限制的应用。
 
 ​	提供Android和IOS手机demo，你可以借助Arduino应用生态，快速开发出一款与手机通信的硬件设备。正如现在非常火爆的可穿戴式手机周边设备，都可以用ble-uno这款平台开发，你可以使用ble-uno与BLE蓝牙设备连接，也可以两个ble-uno主从通信。同时我们为开发者提供了极大的自由度和支持准备，用户不仅可以通过AT指令调试ble-uno，你还可以在ble-uno控制器上添加Arduino兼容的扩展板、传感器、电机和舵机驱动等，当然最大的亮点是你可以通过手机蓝牙直接给ble-uno下载程序。
 
@@ -35,7 +35,7 @@
 * 支持USB虚拟串口，硬件串口，BLE三向透传 
 * 主机模式下支持蓝牙自动连接从机
 * 支持蓝牙无线下载程序
-* MTU为67，单次数据发送量最大为64Byte
+* MTU为67，单次最大数据发送长度为64Byte
 #### 主控核心参数
 * 处理器: ATmega328P-AU QFP32
 * 数字IO引脚：22个(其中6个用作PWM输出)
@@ -101,7 +101,9 @@ ble-uno烧写的为最新Arduino Uno官方Bootloader所以需要使用IDE 1.8.8�
 
 ## ble-uno支持手机apk蓝牙下载程序
 
-[**手机上传程序**](https://github.com/nulllab-org/arduino_ble_flash_demo)
+- [**手机上传程序**](https://github.com/nulllab-org/arduino_ble_flash_demo)
+
+- 固件版本为V1.9以上支持 PC电脑蓝牙上传程序请参考[PC端网页蓝牙上传arduino示例](./tools/arduino_downloard_js.html)
 
 # ble-uno和电子设备连接
 
@@ -143,24 +145,20 @@ void loop() {
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="./image/location_permissions1.png" alt="location_permissions1" style="zoom: 33%;" /> | <img src="./image/location_permissions2.png" alt="location_permissions2" style="zoom: 33%;" /> |
 
-3）打开测试APP,界面。找到对应的蓝牙名（ble-uno4.2/ble-uno5.3）并点击进行连接，此时会出现4个选项，分别用于测试不同的功能，因为这里我们只测试蓝牙是否可以正常收发数据，所以我们选择SK Service入，再选择SK_KEYPRESSED
-
-
+3）打开测试APP,界面。找到对应的蓝牙名（ble-uno4.2/ble-uno5.3）并点击进行连接，此时会出现4个选项，分别用于测试不同的功能，因为这里我们只测试蓝牙是否可以正常收发数据，所以我们选择SK Service，再选择SK_KEYPRESSED
 
 | 连接蓝牙名字                                                 | 选择service                                                  | 选择char service                                             |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="./image/android_app_test1.jpg" alt="location_permissions1" style="zoom: 33%;" /> | <img src="./image/android_app_test2.jpg" alt="location_permissions1" style="zoom: 33%;" /> | <img src="./image/android_app_test1-1.jpg" alt="location_permissions1" style="zoom: 33%;" /> |
 
-4)	我们选择“SK-KEYPRESSED”,点击后如图3.1.9我们可以看到有一个“写入”按键，点击即可进入，我们点击“红色框”即可输入想发送的数据，输入完成后点击“发送”即可将数据发出去
-
-
+4)	我们选择“SK-KEYPRESSED”,点击后如下图我们可以看到有一个“写入”按键，点击即可进入，我们点击“红色框”即可输入想发送的数据，输入完成后点击“发送”即可将数据发出去
 
 |                                                              |                                                              |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="./image/android_app_test3.jpg" alt="location_permissions1" style="zoom: 33%;" /> | <img src="./image/android_app_test4.jpg" alt="location_permissions1" style="zoom: 33%;" /> |
 
-5) 点击发送字符串"on"后，打开ArduinoIDE的串口监视器上打印 turn on led，同时观察ble-uno上的L灯点亮，代表app蓝牙控制主板上的L灯成功，同样的方法发送字符串“off”后，ble-uno上的L灯会熄灭。到此我们安卓手机蓝牙测试完成。
-6) 如果需要接收蓝牙模块发送过来的数据，需要打开通知功能
+5）点击发送字符串"on"后，打开ArduinoIDE的串口监视器上打印 turn on led，同时观察ble-uno上的L灯点亮，代表app蓝牙控制主板上的L灯成功，同样的方法发送字符串“off”后，ble-uno上的L灯会熄灭。到此我们安卓手机蓝牙测试完成。
+6）如果需要接收蓝牙模块发送过来的数据，需要打开通知功能
 
 ## ble-uno和苹果手机/电脑/平板连接
 
@@ -182,8 +180,8 @@ void loop() {
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="./image/ios_app_test5.jpg" alt="location_permissions1" style="zoom:33%;" /> | <img src="./image/ios_app_test6.jpg" alt="location_permissions1" style="zoom:33%;" /> | <img src="./image/ios_app_test7.jpg" alt="location_permissions1" style="zoom:33%;" /> |
 
-5) 点击done后会发送字符串"on"后，打开ArduinoIDE的串口监视器上打印 turn on led，同时观察ble-uno上的L灯点亮，代表app蓝牙控制主板上的L灯成功，同样的方法发送字符串“off”后，ble-uno上的L灯会熄灭。到此我们IOS蓝牙测试完成。
-6) 如果需要接收蓝牙模块发送过来的数据，需要打开Notify功能
+5） 点击done后会发送字符串"on"后，打开ArduinoIDE的串口监视器上打印 turn on led，同时观察ble-uno上的L灯点亮，代表app蓝牙控制主板上的L灯成功，同样的方法发送字符串“off”后，ble-uno上的L灯会熄灭。到此我们IOS蓝牙测试完成。
+6）如果需要接收蓝牙模块发送过来的数据，需要打开Notify功能
 
 ## ble-uno和win10蓝牙连接
 
@@ -226,9 +224,9 @@ AT指令还可以通过直连TypeC数据线直连控制和APP的为0xFFE2的char
 |15 |	AT+AUTOCON |	自动绑定连接上次成功连接的从机设备，重启生效 |	M | 0 |
 |16 |	AT+DISCON |	断开当前的连接 | M |  |
 |17 |	AT+BLEUSB | 设置蓝牙的USB和蓝牙数据传输模式 |	M/S | 0 |
-|18 |	AT+TXPOWER	 | 设置蓝牙发射功率 | M/S |	0 |
+|18 |	AT+TXPOWER	 | 设置蓝牙发射功率 | M/S |	4 |
 |19	| AT+MINI_INTERVAL |	设置ble-uno最小通信间隔 |	M/S	 | 6 |
-|20	| AT+MAX_INTERVAL |	设置ble-uno最大通信间隔 |	M/S	 | 6  |
+|20	| AT+MAX_INTERVAL |	设置ble-uno最大通信间隔 |	M/S	 | 10 |
 |21 |	AT+SERVUUID |	获取蓝牙特征码SERVUUID |	M/S	 | 0xFFE0 |
 |22 |	AT+CHARUUID |	获取字符特征码CHARUUID |	M/S |	0xFFE1 |
 |23 |	AT+SETTING |	恢复出厂系统设置,带参数 |	M/S |  |
@@ -320,18 +318,18 @@ AT指令还可以通过直连TypeC数据线直连控制和APP的为0xFFE2的char
 | ---------------- | ---------------- | ------------ |
 | AT+CON=< Param > | OK+CON=< Param > | 从机蓝牙地址 |
 
-+SCAN
-OK
-mac[1] 3e:bb:9e:e4:e9:9a
-mac[2] 8c:5a:f8:ef:5c:f8
-mac[3] 6b:9c:b3:c4:4b:0c
-mac[4] 17:cc:ef:66:40:b1
-mac[5] fd:e2:4e:af:ea:da
-mac[6] 67:3a:b1:45:c2:e8
-mac[7] d0:44:7a:9e:e4:e4
-OK
-AT+CONN=1代表连接扫描得到的第二个蓝牙设备
-AT+CON=d0:44:7a:9e:e4:e4直接连接Mac地址为d0:44:7a:9e:e4:e4的设备
++SCAN<br />
+OK<br />
+mac[1] 3e:bb:9e:e4:e9:9a0:<br />
+mac[2] 8c:5a:f8:ef:5c:f8<br />
+mac[3] 6b:9c:b3:c4:4b:0c<br />
+mac[4] 17:cc:ef:66:40:b1<br />
+mac[5] fd:e2:4e:af:ea:da<br />
+mac[6] 67:3a:b1:45:c2:e8<br />
+mac[7] d0:44:7a:9e:e4:e4<br />
+OK<br />
+AT+CONN=1代表连接扫描得到的第二个蓝牙设备<br />
+AT+CON=d0:44:7a:9e:e4:e4直接连接Mac地址为d0:44:7a:9e:e4:e4的设备<br />
 
 15、开启蓝牙自动连接模式    开启后，蓝牙模块将自动连接上次成功连接过的设备
 
@@ -365,29 +363,35 @@ AT+CON=d0:44:7a:9e:e4:e4直接连接Mac地址为d0:44:7a:9e:e4:e4的设备
 
 19、设置蓝牙的发射功率
 
+| 指令                  | 响应                          | 参数                                                         |
+| --------------------- | ----------------------------- | ------------------------------------------------------------ |
+| AT+TX_POWER=< Param > | + TX_POWER=< Param ><br /> OK | 0: -20DB<br />1: -14DB<br />2: -8DB<br />3: -4DB<br />4: 0DB<br />5: 1DB<br />6: 2DB<br />7: 3DB<br />8: 4DB<br />9: 5DB |
+
+20、设置BLE芯片最小通信间隔，
+
 | 指令                       | 响应                               | 参数                                                 |
 | -------------------------- | ---------------------------------- | ---------------------------------------------------- |
 | AT+MINI_INTERVAL=< Param > | + MINI_INTERVAL=< Param ><br /> OK | PC和Android，建议设为为10 <br> iOS设备，建议设置为20 |
 
-20、设置BLE芯片最大通信间隔，以毫秒为单位
+21、设置BLE芯片最大通信间隔，以毫秒为单位
 
 | 指令                      | 响应                              | 参数                                                 |
 | ------------------------- | --------------------------------- | ---------------------------------------------------- |
 | AT+MAX_INTERVAL=< Param > | + MAX_INTERVAL=< Param ><br /> OK | PC和Android，建议设为为10 <br> iOS设备，建议设置为40 |
 
-21、获取BLE服务特征码UUID
+22、获取BLE服务特征码UUID
 
 | 指令        | 响应                     | 参数 |
 | ----------- | ------------------------ | ---- |
 | AT+SERVUUID | +SERVUUID=0xffe0<br />OK |      |
 
-22、获取BLE字符特征码UUID
+23、获取BLE字符特征码UUID
 
 | 指令        | 响应                     | 参数 |
 | ----------- | ------------------------ | ---- |
 | AT+CHARUUID | +CHARUUID=0xffe0<br />OK |      |
 
-23、系统设置
+24、系统设置
 
 | 指令                 | 响应                       | 参数                                                        |
 | -------------------- | -------------------------- | ----------------------------------------------------------- |
@@ -396,7 +400,7 @@ AT+CON=d0:44:7a:9e:e4:e4直接连接Mac地址为d0:44:7a:9e:e4:e4的设备
 ## 开发说明
 
 ble-uno最核心的功能就是蓝牙转串口透传功能，所以所谓Arduino蓝牙编程，其实就是对arduino的串口(Serial)进行读写操作我们编程时需要注意两点
-1、ble-nano的MTU为67即单包蓝牙数据最带为64Byte，所以超过64个字节的时候，arudino发送时需要分包发送。
+1、ble-nano的MTU为67即单包蓝牙数据最长为64Byte，所以超过64个字节的时候，arudino发送时需要分包发送。
 
 2、单次发送数据为64Byte时，发送间隔需要超过100ms，否则会丢包。
 
