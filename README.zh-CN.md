@@ -1,6 +1,6 @@
  [English](./README.md)
 
-# ble-uno介绍
+# Ble-Uno介绍
 
 
 
@@ -10,9 +10,9 @@
 
 
 
-## 什么是ble-uno
+## 什么是Ble-Uno
 
-​	ble-uno是emakefun公司基于官方标准Arduino uno R3主板上集成低功耗蓝牙芯片而开发一款具备无线蓝牙功能的开发板，它的功能和引脚，使用方法，完全兼容标准的Arduino unoR3主板，工作频段为2.4GHZ 范围，调制方式为 GFSK， 接收灵敏度-96dBm，最大发射功率为+5db，最大发射距离超过200米，采用RISC-V架构CH573芯片设计，支持用户通过AT命令查看修改设备名、服务UUID、发射功率、配对密码等指令，方便快捷使用。产品身材非常小，适合于很多对于体积有苛刻限制的应用。
+​	ble-uno是emakefun公司基于官方标准Arduino uno R3主板上集成低功耗蓝牙芯片而开发一款具备无线蓝牙功能的开发板，它的功能和引脚，使用方法，完全兼容标准的Arduino unoR3主板，工作频段为2.4GHZ 范围，调制方式为 GFSK， 接收灵敏度-96dBm，最大发射功率为+5db，最大发射距离超过200米，采用RISC-V架构CH571F芯片设计，支持用户通过AT命令查看修改设备名、服务UUID、发射功率、配对密码等指令，方便快捷使用。产品身材非常小，适合于很多对于体积有苛刻限制的应用。
 
 ​	提供Android和IOS手机demo，你可以借助Arduino应用生态，快速开发出一款与手机通信的硬件设备。正如现在非常火爆的可穿戴式手机周边设备，都可以用ble-uno这款平台开发，你可以使用ble-uno与BLE蓝牙设备连接，也可以两个ble-uno主从通信。同时我们为开发者提供了极大的自由度和支持准备，用户不仅可以通过AT指令调试ble-uno，你还可以在ble-uno控制器上添加Arduino兼容的扩展板、传感器、电机和舵机驱动等，当然最大的亮点是你可以通过手机蓝牙直接给ble-uno下载程序。
 
@@ -26,7 +26,7 @@
 
 #### 低功耗蓝牙BLE参数
 
-* BLE芯片: RISC-V架构ch57xF芯片（高度兼容TI CC2540蓝牙SOC）
+* BLE芯片: RISC-V架构ch571F芯片（高度兼容TI CC2540蓝牙SOC）
 * 工作频道: 2.4G
 * 0dBm 发送功率时电流 6mA  
 * 接收灵敏度  -96dBm，可编程+5dBm 发送功率  。
@@ -37,7 +37,7 @@
 * 支持蓝牙无线下载程序
 * MTU为67，单次最大数据发送长度为64Byte
 #### 主控核心参数
-* 处理器: ATmega328P-AU QFP32
+* 处理器: ATmega328PB-AU QFP32
 * 数字IO引脚：22个(其中6个用作PWM输出)
 * 模拟输入引脚：6 (A0~A5) 
 * IO引脚直流电流：40mA 
@@ -46,7 +46,7 @@
 * Flash内存：32KB(其中0.5KB用于引导加载程序) 
 * SRAM： 2KB
 * EEPROM： 1KB
-* USB转串口芯片： CH57xF芯片，兼容arduino官方uno驱动
+* USB转串口芯片： CH571F芯片，兼容arduino官方uno驱动
 * 工作时钟：16 MHZ
 
 ## 参数对比
@@ -97,7 +97,7 @@ ble-uno烧写的为最新Arduino Uno官方Bootloader所以需要使用IDE 1.8.8�
 
 选择开发板类型为Arduino Uno处理器为 ATmega328P，如下图
 
-![ide](./image/ide_downloard.png)
+![ide](./image/ide_uploard_zh.png)
 
 ## ble-uno支持手机apk蓝牙下载程序
 
@@ -210,10 +210,10 @@ AT指令还可以通过直连TypeC数据线直连控制和APP的为0xFFE2的char
 |1 | AT | 测试 | M/S | |
 |2 | AT+ALL	| 打印ble-uno所有的配置信息 | M/S |	|
 |3 | AT+RESET	| 软件复位BLE蓝牙芯片 | M/S |	|
-|4 | AT+TARGE_RESET	| 复位Arduino(Atmega328P芯片) | M/S |	|
+|4 | AT+TARGE_RESET	| 复位Arduino(Atmega328PB芯片) | M/S |	|
 |5 | AT+VER	| 查看ble-uno固件版本号 | M/S |  |
 |6 | AT+BAUD | 配置串口波特率	 | M/S	| 115200 |
-|7 |AT+NAME |	查看配置蓝牙广播名字	|	ble-uno ||
+|7 |AT+NAME |	查看配置蓝牙广播名字(bleuno加6位mac地址)	|	bleunoxxxxxx ||
 |8 |	AT+MAC	| 查看设置蓝牙12位mac地址	| M/S |  |
 |9 |	AT+AUTH	| 设置蓝牙连接是否需要鉴权	| S | 0 |
 |10 |	AT+PASS	| 设置蓝牙连接密码	| S | 123456 |
@@ -482,7 +482,7 @@ void loop() {
 
 二、我们可以分别对主机和从机ble-uno分别编程来控制从机ble-uno的L灯亮和灭。
 
-主机程序如下[master](./example/ble-uno_communication/master/master.ino)
+主机程序如下[master](./example/ble_communication/master/master.ino)
 
 ```c
 String ble_data;
@@ -527,7 +527,7 @@ void loop() {
 }
 ```
 
-2)  从机程序如下[slave](./example/ble-uno_communication/slave/slave.ino)
+2)  从机程序如下[slave](./example/ble_communication/slave/slave.ino)
 
 ```c
 String ble_data;
