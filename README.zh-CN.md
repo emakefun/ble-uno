@@ -68,7 +68,7 @@ arduino uno, ble-uno 3.0,  ble-uno4.2  ble-uno5.3 四款产品对比表格
 
 ###  原理图
 
-[原理图下载](schematic/Ble-Uno_v4.2.pdf)
+[原理图下载](./schematic/Ble-Uno_v4.2.pdf)
 
 ![Ble_Uno_sch](./image/Ble_Uno_sch.png)
 

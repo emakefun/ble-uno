@@ -5,12 +5,6 @@
 
 <img src="./image/ble_uno.png" alt="top view"  />
 
-
-
-
-
-
-
 ## What is Ble-Uno
 
 ​	Ble-Uno is a development board developed by emakefun company, which integrates a low-power Bluetooth chip onto the official Arduino Uno R3 board. It is a wireless Bluetooth-enabled development board that has the same functionality, pins, and usage methods as the standard Arduino Uno R3 board.
@@ -39,7 +33,7 @@ It supports users to view and modify device names, service UUID, transmission po
 * Support mobile phone download program
 
 #### Main control core parameters
-* Processor: ATmega328PB-AU QFN32
+* Processor: ATmega328PB-AU QFP32
 * Digital IO pins: 22 (6 of them used as PWM output).
 * Analog input pins：8 (A0~A7) 
 * DC current of IO pins：40mA 
@@ -62,25 +56,21 @@ arduino uno, ble-uno 3.0,  ble-uno4.2  ble-uno5.3  comparison table for four pro
 | BLE       | No                                               | TI CC2540 BLE4.0<br />0dBm Transmission 30 meters range, power consumption of 24mA<br />not support ble uploard | WCH CH571F BLE4.2<br />0dBm Distance 150m, Transmit Power 6mA<br />support ble uploard | WCH CH58xF BLE5.3<br />0dBm Distance 300m, Transmit Power 6mA<br />support ble uploard |
 | driver    | Atmgea16U2 Arduino Uno office driver chip        | CC2540 chip                                                  | Compatible with Arduino Uno office driver                    | Compatible with Arduino Uno officedriver                     |
 | Parameter | PCB size：53.4x68.6mm                            | PCB size：53.4x68.6mm                                        | PCB size：53.4x68.6mm                                        | PCB size：53.4x68.6mm                                        |
-| Interface | Type-B                                           | Micro-Usb                                                    | Micro-Usb                                                    | Type C                                                       |
+| Interface | Type-B                                           | Micro-Usb                                                    | Micro-Usb/Type-C                                                    | Type-C                                                       |
 
 ### ### Pin description
 
-![type_c_usb_ble_uno_annotation_diagram](E:/Github/emakefun/ble-uno/image/type_c_usb_ble_uno_annotation_diagram.png)
+![type_c_usb_ble_uno_annotation_diagram](./image/type_c_usb_ble_uno_annotation_diagram.png)
 
 ###  Schematic diagram
 
-[Schematic diagram download](schematic/ble-uno4.2.pdf)
+[Schematic diagram download](./schematic/ble-uno4.2.pdf)
 
-![Ble_Uno_sch](E:/Github/emakefun/ble-uno/image/Ble_Uno_sch.png)
+![Ble_Uno_sch](./image/Ble_Uno_sch.png)
 
 ###  Dimensional drawing
 
-
-
-###  ![type_c_usb_ble_uno_dimension](E:/Github/emakefun/ble-uno/image/type_c_usb_ble_uno_dimension.png)
-
-
+###  ![type_c_usb_ble_uno_dimension](./image/type_c_usb_ble_uno_dimension.png)
 
 ###  Indicator light description
 
